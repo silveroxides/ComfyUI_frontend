@@ -41,6 +41,36 @@ const setPixel = (
   data[index + 3] = alpha
 }
 
+/**
+ * Returns blurred image data to smooth out JPEG artifacts and dithered edges.
+ * This helps the color select tool avoid overshooting on compressed images.
+ */
+const getBlurredImageData = (
+  canvas: HTMLCanvasElement,
+  radius: number
+): Uint8ClampedArray => {
+  const w = canvas.width
+  const h = canvas.height
+
+  // Create off-screen canvas
+  const tempCanvas = document.createElement('canvas')
+  tempCanvas.width = w
+  tempCanvas.height = h
+  const tempCtx = tempCanvas.getContext('2d')
+  if (!tempCtx) {
+    // Fallback: return original data if context creation fails
+    return canvas.getContext('2d')!.getImageData(0, 0, w, h).data
+  }
+
+  // Apply Blur and Draw
+  // This smoothes out JPEG artifacts and dithered edges
+  tempCtx.filter = `blur(${radius}px)`
+  tempCtx.drawImage(canvas, 0, 0)
+
+  // Return the clean, averaged data for calculation
+  return tempCtx.getImageData(0, 0, w, h).data
+}
+
 // Color comparison utilities
 const rgbToHSL = (
   r: number,
@@ -137,6 +167,35 @@ const isPixelInRangeSimple = (
   return distance <= tolerance
 }
 
+/**
+ * Calculates distance with heavy weight on Luma (Brightness)
+ * and lower weight on Chroma (Color), ignoring JPEG color noise.
+ * Uses ITU-R BT.709 luma weights.
+ */
+const isPixelInRangeLumaWeighted = (
+  pixel: { r: number; g: number; b: number },
+  target: { r: number; g: number; b: number },
+  tolerance: number
+): boolean => {
+  // Standard Luma constants (Rec. 709)
+  const luma1 = 0.2126 * pixel.r + 0.7152 * pixel.g + 0.0722 * pixel.b
+  const luma2 = 0.2126 * target.r + 0.7152 * target.g + 0.0722 * target.b
+  const lumaDiff = luma1 - luma2
+
+  // Calculate simple RGB difference
+  const rDiff = pixel.r - target.r
+  const gDiff = pixel.g - target.g
+  const bDiff = pixel.b - target.b
+
+  // Weight Luminance 80% and Color 20%
+  // This ignores the "purple/green" blockiness of JPEGs
+  const distanceSq =
+    lumaDiff * lumaDiff * 0.8 +
+    ((rDiff * rDiff + gDiff * gDiff + bDiff * bDiff) / 3) * 0.2
+
+  return distanceSq <= tolerance * tolerance
+}
+
 const isPixelInRangeHSL = (
   pixel: { r: number; g: number; b: number },
   target: { r: number; g: number; b: number },
@@ -184,6 +243,8 @@ const isPixelInRange = (
   switch (method) {
     case ColorComparisonMethod.Simple:
       return isPixelInRangeSimple(pixel, target, tolerance)
+    case ColorComparisonMethod.LumaWeighted:
+      return isPixelInRangeLumaWeighted(pixel, target, tolerance)
     case ColorComparisonMethod.HSL:
       return isPixelInRangeHSL(pixel, target, tolerance)
     case ColorComparisonMethod.LAB:
@@ -300,7 +361,13 @@ export function useCanvasTools() {
 
     const maskData = maskCtx.getImageData(0, 0, width, height)
     const maskDataArray = maskData.data
-    const imageDataArray = imgCtx.getImageData(0, 0, width, height).data
+
+    // Get image data - optionally apply blur to smooth JPEG artifacts
+    const blurRadius = store.colorSelectBlurRadius
+    const imageDataArray =
+      blurRadius > 0
+        ? getBlurredImageData(imgCanvas, blurRadius)
+        : imgCtx.getImageData(0, 0, width, height).data
 
     const tolerance = store.colorSelectTolerance
     const method = store.colorComparisonMethod
@@ -460,7 +527,8 @@ export function useCanvasTools() {
     [
       () => store.colorSelectTolerance,
       () => store.colorComparisonMethod,
-      () => store.selectionOpacity
+      () => store.selectionOpacity,
+      () => store.colorSelectBlurRadius
     ],
     async () => {
       if (

@@ -42,6 +42,7 @@ export enum MaskBlendMode {
 
 export enum ColorComparisonMethod {
   Simple = 'simple',
+  LumaWeighted = 'lumaWeighted',
   HSL = 'hsl',
   LAB = 'lab'
 }

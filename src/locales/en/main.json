@@ -948,6 +948,7 @@
     "tolerance": "Tolerance",
     "fillOpacity": "Fill Opacity",
     "colorSelectSettings": "Color Select Settings",
+    "blurRadius": "Blur Radius",
     "selectionOpacity": "Selection Opacity",
     "livePreview": "Live Preview",
     "applyToWholeImage": "Apply to Whole Image",

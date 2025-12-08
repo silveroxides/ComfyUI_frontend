@@ -16,6 +16,15 @@
     />
 
     <SliderControl
+      :label="t('maskEditor.blurRadius')"
+      :min="0"
+      :max="10"
+      :step="1"
+      :model-value="store.colorSelectBlurRadius"
+      @update:model-value="onBlurRadiusChange"
+    />
+
+    <SliderControl
       :label="t('maskEditor.selectionOpacity')"
       :min="0"
       :max="100"
@@ -75,6 +84,10 @@ const methodOptions = Object.values(ColorComparisonMethod)
 
 const onToleranceChange = (value: number) => {
   store.setColorSelectTolerance(value)
+}
+
+const onBlurRadiusChange = (value: number) => {
+  store.setColorSelectBlurRadius(value)
 }
 
 const onSelectionOpacityChange = (value: number) => {

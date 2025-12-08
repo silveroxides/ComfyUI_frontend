@@ -37,6 +37,7 @@ export const useMaskEditorStore = defineStore('maskEditor', () => {
 
   const colorSelectTolerance = ref<number>(20)
   const colorSelectLivePreview = ref<boolean>(false)
+  const colorSelectBlurRadius = ref<number>(0)
   const colorComparisonMethod = ref<ColorComparisonMethod>(
     ColorComparisonMethod.Simple
   )
@@ -148,6 +149,10 @@ export const useMaskEditorStore = defineStore('maskEditor', () => {
     colorSelectTolerance.value = _.clamp(tolerance, 0, 255)
   }
 
+  function setColorSelectBlurRadius(radius: number): void {
+    colorSelectBlurRadius.value = _.clamp(radius, 0, 10)
+  }
+
   function setMaskTolerance(tolerance: number): void {
     maskTolerance.value = _.clamp(tolerance, 0, 255)
   }
@@ -197,6 +202,7 @@ export const useMaskEditorStore = defineStore('maskEditor', () => {
     fillOpacity.value = 100
     colorSelectTolerance.value = 20
     colorSelectLivePreview.value = false
+    colorSelectBlurRadius.value = 0
     colorComparisonMethod.value = ColorComparisonMethod.Simple
     applyWholeImage.value = false
     maskBoundary.value = false
@@ -219,6 +225,7 @@ export const useMaskEditorStore = defineStore('maskEditor', () => {
     fillOpacity,
     colorSelectTolerance,
     colorSelectLivePreview,
+    colorSelectBlurRadius,
     colorComparisonMethod,
     applyWholeImage,
     maskBoundary,
@@ -260,6 +267,7 @@ export const useMaskEditorStore = defineStore('maskEditor', () => {
     setPaintBucketTolerance,
     setFillOpacity,
     setColorSelectTolerance,
+    setColorSelectBlurRadius,
     setMaskTolerance,
     setSelectionOpacity,
     setZoomRatio,
