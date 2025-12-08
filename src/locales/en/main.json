@@ -54,6 +54,8 @@
     "devices": "Devices",
     "about": "About",
     "add": "Add",
+    "increment": "Increase {label}",
+    "decrement": "Decrease {label}",
     "confirm": "Confirm",
     "confirmed": "Confirmed",
     "reset": "Reset",
